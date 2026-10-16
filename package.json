@@ -1,0 +1,30 @@
+{
+  "name": "menumate-ai",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MenuMate AI — Smart Multilingual Restaurant Menu Builder powered by Gemma",
+  "license": "MIT",
+  "type": "module",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "concurrently -n server,client -c green,cyan \"npm run dev -w server\" \"npm run dev -w client\"",
+    "build": "npm run build -w client && npm run build -w server",
+    "start": "npm run start -w server",
+    "typecheck": "npm run typecheck -w client && npm run typecheck -w server",
+    "test": "npm run test -w server",
+    "seed": "npm run seed -w server"
+  },
+  "dependencies": {
+    "zod": "^4.3.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0",
+    "typescript": "^5.9.3"
+  }
+}
