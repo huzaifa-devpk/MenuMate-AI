@@ -6,18 +6,8 @@ import { MenuEditorPage } from "./pages/MenuEditorPage";
 import { NewMenuPage } from "./pages/NewMenuPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { PreviewPage } from "./pages/PreviewPage";
-import { Construction } from "lucide-react";
-import { ButtonLink, EmptyState } from "./components/ui";
-
-function ComingSoon({ title }: { title: string }) {
-  return (
-    <div className="container-page py-20">
-      <div className="mx-auto max-w-lg">
-        <EmptyState icon={Construction} title={title} description="This page is part of the next build phase." action={<ButtonLink to="/">Back to home</ButtonLink>} />
-      </div>
-    </div>
-  );
-}
+import { PublicMenuPage } from "./pages/PublicMenuPage";
+import { QrPage } from "./pages/QrPage";
 
 export default function App() {
   return (
@@ -28,10 +18,10 @@ export default function App() {
         <Route path="/menu/new" element={<NewMenuPage />} />
         <Route path="/menu/:id/edit" element={<MenuEditorPage />} />
         <Route path="/menu/:id/preview" element={<PreviewPage />} />
-        <Route path="/menu/:id/qr" element={<ComingSoon title="QR code & sharing" />} />
+        <Route path="/menu/:id/qr" element={<QrPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
-      <Route path="/m/:slug" element={<ComingSoon title="Public menu" />} />
+      <Route path="/m/:slug" element={<PublicMenuPage />} />
     </Routes>
   );
 }

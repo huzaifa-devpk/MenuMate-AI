@@ -3,6 +3,12 @@ import { ImageOff, MapPin, Phone, UtensilsCrossed } from "lucide-react";
 import { dietaryLabelName, formatPrice, getLanguage, isRtl, resolveField, type Menu } from "@shared";
 import { cx } from "./ui";
 
+function CoverImage({ url }: { url: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return null;
+  return <img src={url} alt="" className="aspect-[3/1] w-full object-cover" onError={() => setFailed(true)} />;
+}
+
 function DishImage({ url, alt, rounded }: { url: string | null; alt: string; rounded: string }) {
   const [failed, setFailed] = useState(false);
   if (!url || failed) {
@@ -39,6 +45,7 @@ export function MenuDisplay({
         )}
       >
         <div className={cx("h-2", classic ? "bg-brand-600" : "bg-brand-400")} />
+        {menu.restaurant.coverImageUrl && <CoverImage url={menu.restaurant.coverImageUrl} />}
         <div className={cx("px-6 py-8 sm:px-10", !classic && "bg-[radial-gradient(60%_80%_at_100%_0%,rgb(16_185_129_/_0.35),transparent)]")}>
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">

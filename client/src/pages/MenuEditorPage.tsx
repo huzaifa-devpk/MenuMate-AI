@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { useParams } from "react-router-dom";
-import { ArrowDown, ArrowUp, Eye, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Eye, Plus, QrCode, Trash2 } from "lucide-react";
 import {
   CURRENCIES,
   LANGUAGES,
@@ -177,6 +177,24 @@ export function MenuEditorPage() {
             <ButtonLink to={`/menu/${menu.id}/preview`} variant="outline" icon={Eye}>
               Preview
             </ButtonLink>
+            <ButtonLink to={`/menu/${menu.id}/qr`} variant="outline" icon={QrCode}>
+              QR code
+            </ButtonLink>
+            {!readOnly && (
+              <Button
+                variant={menu.isPublished ? "secondary" : "primary"}
+                loading={busy === "publish"}
+                onClick={() =>
+                  void run(
+                    "publish",
+                    () => api<Menu>(`/api/menus/${id}/${menu.isPublished ? "unpublish" : "publish"}`, { method: "POST" }),
+                    menu.isPublished ? "Menu unpublished." : "Menu published.",
+                  )
+                }
+              >
+                {menu.isPublished ? "Unpublish" : "Publish"}
+              </Button>
+            )}
           </>
         }
       />

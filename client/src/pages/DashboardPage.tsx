@@ -213,6 +213,9 @@ export function DashboardPage() {
                     <ButtonLink to={`/menu/${menu.id}/preview`} size="sm" variant="outline">
                       Preview
                     </ButtonLink>
+                    <ButtonLink to={`/menu/${menu.id}/qr`} size="sm" variant="outline">
+                      QR code
+                    </ButtonLink>
                     {!menu.isDemo && (
                       <Button size="sm" variant="ghost" icon={Trash2} loading={deletingId === menu.id} onClick={() => void deleteMenu(menu)}>
                         Delete

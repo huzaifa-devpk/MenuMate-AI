@@ -7,6 +7,7 @@ import { config } from "./config";
 import { errorHandler } from "./lib/errors";
 import { createAiRouter } from "./routes/ai";
 import { createMenuRouter } from "./routes/menus";
+import { createPublicRouter } from "./routes/public";
 import { createRestaurantRouter } from "./routes/restaurant";
 import { createGemmaClient } from "./services/ai/client";
 import type { GemmaClient } from "./services/ai/types";
@@ -32,6 +33,7 @@ export function createApp(deps: AppDeps) {
   app.use("/api/restaurant", createRestaurantRouter(deps.db));
   app.use("/api/menus", createMenuRouter(deps.db));
   app.use("/api/ai", createAiRouter(deps.db, gemma));
+  app.use("/api/public", createPublicRouter(deps.db));
 
   app.get("/api/health", (_req, res) => {
     let dbOk = true;

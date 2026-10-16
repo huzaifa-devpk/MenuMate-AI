@@ -347,6 +347,14 @@ export function updateMenu(db: Db, id: string, patch: MenuUpdate): Menu {
   return requireMenu(db, id);
 }
 
+export function setPublished(db: Db, id: string, published: boolean): Menu {
+  const current = requireMenu(db, id);
+  assertMenuWritable(current);
+  const now = nowIso();
+  db.prepare("UPDATE menus SET is_published = ?, published_at = ?, updated_at = ? WHERE id = ?").run(published ? 1 : 0, published ? now : null, now, id);
+  return requireMenu(db, id);
+}
+
 export function deleteMenu(db: Db, id: string) {
   const current = requireMenu(db, id);
   assertMenuWritable(current);

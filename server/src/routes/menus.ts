@@ -14,12 +14,14 @@ import {
   reorderDishes,
   requireMenu,
   saveApprovedTranslations,
+  setPublished,
   updateCategory,
   updateDish,
   updateMenu,
 } from "../db/repository";
 import { asyncRoute, routeParam } from "../lib/async";
 import { badRequest } from "../lib/errors";
+import { shareInfo, sharePng } from "../services/share";
 
 export function createMenuRouter(db: Db) {
   const router = Router();
@@ -54,6 +56,37 @@ export function createMenuRouter(db: Db) {
     asyncRoute(async (req, res) => {
       const input = menuUpdateSchema.parse(req.body);
       res.json(updateMenu(db, routeParam(req, "menuId"), input));
+    }),
+  );
+
+  router.post(
+    "/:menuId/publish",
+    asyncRoute(async (req, res) => {
+      res.json(setPublished(db, routeParam(req, "menuId"), true));
+    }),
+  );
+
+  router.post(
+    "/:menuId/unpublish",
+    asyncRoute(async (req, res) => {
+      res.json(setPublished(db, routeParam(req, "menuId"), false));
+    }),
+  );
+
+  router.get(
+    "/:menuId/share",
+    asyncRoute(async (req, res) => {
+      res.json(await shareInfo(db, routeParam(req, "menuId")));
+    }),
+  );
+
+  router.get(
+    "/:menuId/qr.png",
+    asyncRoute(async (req, res) => {
+      const file = await sharePng(db, routeParam(req, "menuId"));
+      res.setHeader("Content-Type", "image/png");
+      res.setHeader("Content-Disposition", `attachment; filename="${file.filename}"`);
+      res.send(file.png);
     }),
   );
 
