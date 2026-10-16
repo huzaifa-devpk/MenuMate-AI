@@ -125,12 +125,12 @@ function touchMenu(db: Db, menuId: string) {
 }
 
 export function getPrimaryRestaurant(db: Db): Restaurant | null {
-  const row = db.prepare("SELECT * FROM restaurants ORDER BY created_at ASC LIMIT 1").get() as RestaurantRow | undefined;
+  const row = db.prepare("SELECT * FROM restaurants WHERE is_demo = 0 ORDER BY created_at ASC LIMIT 1").get() as RestaurantRow | undefined;
   return row ? mapRestaurant(row) : null;
 }
 
 export function savePrimaryRestaurant(db: Db, input: RestaurantInput): Restaurant {
-  const existing = db.prepare("SELECT * FROM restaurants ORDER BY created_at ASC LIMIT 1").get() as RestaurantRow | undefined;
+  const existing = db.prepare("SELECT * FROM restaurants WHERE is_demo = 0 ORDER BY created_at ASC LIMIT 1").get() as RestaurantRow | undefined;
   const now = nowIso();
   if (!existing) {
     const id = newId();
@@ -352,6 +352,47 @@ export function setPublished(db: Db, id: string, published: boolean): Menu {
   assertMenuWritable(current);
   const now = nowIso();
   db.prepare("UPDATE menus SET is_published = ?, published_at = ?, updated_at = ? WHERE id = ?").run(published ? 1 : 0, published ? now : null, now, id);
+  return requireMenu(db, id);
+}
+
+export function duplicateMenu(db: Db, menuId: string): Menu {
+  const source = requireMenu(db, menuId);
+  const restaurantId = source.isDemo ? getPrimaryRestaurant(db)?.id : source.restaurantId;
+  if (!restaurantId) throw badRequest("Save your restaurant profile before duplicating the sample menu.");
+  const id = newId();
+  const now = nowIso();
+  const name = `${source.name} copy`.slice(0, 120);
+  const slug = uniqueSlug(db, name);
+  const insertTranslation = db.prepare(
+    `INSERT INTO translations (entity_type, entity_id, language, field, text, status, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, 'approved', ?, ?)`,
+  );
+  const tx = db.transaction(() => {
+    db.prepare(
+      `INSERT INTO menus
+        (id, restaurant_id, name, slug, currency, default_language, theme, is_published, published_at, is_demo, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 0, NULL, 0, ?, ?)`,
+    ).run(id, restaurantId, name, slug, source.currency, source.defaultLanguage, source.theme, now, now);
+    for (const category of source.categories) {
+      const categoryId = newId();
+      db.prepare("INSERT INTO categories (id, menu_id, name, sort_order) VALUES (?, ?, ?, ?)").run(categoryId, id, category.name, category.sortOrder);
+      for (const [language, fields] of Object.entries(category.translations)) {
+        if (fields.name) insertTranslation.run("category", categoryId, language, "name", fields.name, now, now);
+      }
+      for (const dish of category.dishes) {
+        const dishId = newId();
+        db.prepare(
+          `INSERT INTO dishes (id, category_id, name, description, price, image_url, labels, is_available, sort_order)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ).run(dishId, categoryId, dish.name, dish.description, dish.price, dish.imageUrl, JSON.stringify(dish.labels), dish.isAvailable ? 1 : 0, dish.sortOrder);
+        for (const [language, fields] of Object.entries(dish.translations)) {
+          if (fields.name) insertTranslation.run("dish", dishId, language, "name", fields.name, now, now);
+          if (fields.description) insertTranslation.run("dish", dishId, language, "description", fields.description, now, now);
+        }
+      }
+    }
+  });
+  tx();
   return requireMenu(db, id);
 }
 

@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import type { Menu } from "@shared";
 import { MenuDisplay } from "../components/MenuDisplay";
-import { Alert, ButtonLink, Spinner } from "../components/ui";
-import { api, errorMessage } from "../lib/api";
+import { FileDown } from "lucide-react";
+import { Alert, Button, ButtonLink, Spinner } from "../components/ui";
+import { api, downloadPdf, errorMessage } from "../lib/api";
 
 export function PreviewPage() {
   const { id = "" } = useParams();
@@ -11,6 +12,8 @@ export function PreviewPage() {
   const [language, setLanguage] = useState("en");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -50,12 +53,32 @@ export function PreviewPage() {
   return (
     <div className="bg-cream-100/40 py-8">
       <div className="container-page">
+        {pdfError && (
+          <Alert tone="error" className="no-print mb-4">
+            {pdfError}
+          </Alert>
+        )}
         <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-charcoal-600">
             Preview of <span className="font-semibold text-charcoal-900">{menu.name}</span>
             {menu.isPublished ? " · published" : " · not published yet"}
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              icon={FileDown}
+              loading={downloading}
+              onClick={() => {
+                setDownloading(true);
+                setPdfError(null);
+                downloadPdf(menu.id, language, `${menu.slug}-${language}.pdf`)
+                  .catch((err: unknown) => setPdfError(errorMessage(err, "Could not download the PDF.")))
+                  .finally(() => setDownloading(false));
+              }}
+            >
+              Download PDF
+            </Button>
             <ButtonLink to={`/menu/${menu.id}/edit`} size="sm" variant="outline">
               Back to editor
             </ButtonLink>

@@ -25,6 +25,21 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   return data as T;
 }
 
+export async function downloadPdf(menuId: string, language: string, filename: string) {
+  const res = await fetch(`/api/menus/${menuId}/pdf?language=${encodeURIComponent(language)}`);
+  if (!res.ok) {
+    const data = (await res.json().catch(() => null)) as ApiError | null;
+    throw new ApiClientError(res.status, data?.error?.code ?? "REQUEST_FAILED", data?.error?.message ?? "Could not download the PDF.");
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
 export function errorMessage(error: unknown, fallback = "Something went wrong. Please try again."): string {
   if (error instanceof ApiClientError) {
     if (Array.isArray(error.details) && error.details.length > 0) {

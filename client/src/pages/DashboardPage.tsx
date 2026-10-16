@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Plus, Store, Trash2 } from "lucide-react";
-import { CURRENCIES, LANGUAGES, restaurantInputSchema, type MenuSummary, type Restaurant } from "@shared";
-import { ApiClientError, api, errorMessage } from "../lib/api";
+import { useNavigate } from "react-router-dom";
+import { Copy, FileDown, Plus, Store, Trash2 } from "lucide-react";
+import { CURRENCIES, LANGUAGES, restaurantInputSchema, type Menu, type MenuSummary, type Restaurant } from "@shared";
+import { ApiClientError, api, downloadPdf, errorMessage } from "../lib/api";
 import { fieldErrors, formatWhen } from "../lib/format";
 import { Alert, Badge, Button, ButtonLink, EmptyState, Input, PageHeader, Spinner, Textarea } from "../components/ui";
 
@@ -41,6 +42,7 @@ function toForm(restaurant: Restaurant): RestaurantForm {
 }
 
 export function DashboardPage() {
+  const navigate = useNavigate();
   const [form, setForm] = useState<RestaurantForm>(emptyForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [menus, setMenus] = useState<MenuSummary[]>([]);
@@ -102,6 +104,25 @@ export function DashboardPage() {
       setError(errorMessage(err, "Could not save the restaurant profile."));
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function duplicateMenu(menu: MenuSummary) {
+    setError(null);
+    try {
+      const copy = await api<Menu>(`/api/menus/${menu.id}/duplicate`, { method: "POST" });
+      navigate(`/menu/${copy.id}/edit`);
+    } catch (err) {
+      setError(errorMessage(err, "Could not duplicate that menu."));
+    }
+  }
+
+  async function downloadMenu(menu: MenuSummary) {
+    setError(null);
+    try {
+      await downloadPdf(menu.id, menu.defaultLanguage, `${menu.slug}-${menu.defaultLanguage}.pdf`);
+    } catch (err) {
+      setError(errorMessage(err, "Could not download the PDF."));
     }
   }
 
@@ -216,6 +237,14 @@ export function DashboardPage() {
                     <ButtonLink to={`/menu/${menu.id}/qr`} size="sm" variant="outline">
                       QR code
                     </ButtonLink>
+                    <Button size="sm" variant="outline" icon={FileDown} onClick={() => void downloadMenu(menu)}>
+                      PDF
+                    </Button>
+                    {menu.isDemo && (
+                      <Button size="sm" variant="secondary" icon={Copy} onClick={() => void duplicateMenu(menu)}>
+                        Duplicate
+                      </Button>
+                    )}
                     {!menu.isDemo && (
                       <Button size="sm" variant="ghost" icon={Trash2} loading={deletingId === menu.id} onClick={() => void deleteMenu(menu)}>
                         Delete

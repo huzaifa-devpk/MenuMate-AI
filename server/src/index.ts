@@ -1,8 +1,11 @@
 import { config } from "./config";
 import { createApp } from "./app";
 import { openDatabase } from "./db/connection";
+import { seedDemo } from "./db/seed";
 
 const db = openDatabase(config.DATABASE_PATH);
+const seeded = seedDemo(db);
+if (seeded.created) console.log(`Seeded sample menu at /m/${seeded.slug}`);
 
 const app = createApp({ db });
 

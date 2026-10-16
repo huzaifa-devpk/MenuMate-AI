@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { useParams } from "react-router-dom";
-import { ArrowDown, ArrowUp, Eye, Plus, QrCode, Trash2 } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
+import { ArrowDown, ArrowUp, Copy, Eye, FileDown, Plus, QrCode, Trash2 } from "lucide-react";
 import {
   CURRENCIES,
   LANGUAGES,
@@ -14,7 +14,7 @@ import {
 import { DishForm, emptyDishDraft, type DishDraft } from "../components/editor/DishForm";
 import { TranslatePanel } from "../components/editor/TranslatePanel";
 import { Alert, Badge, Button, ButtonLink, Input, PageHeader, Select, Spinner } from "../components/ui";
-import { api, errorMessage } from "../lib/api";
+import { api, downloadPdf, errorMessage } from "../lib/api";
 import { fieldErrors } from "../lib/format";
 
 function dishToDraft(dish: Dish): DishDraft {
@@ -39,6 +39,7 @@ function moveId(ids: string[], index: number, direction: -1 | 1): string[] | nul
 
 export function MenuEditorPage() {
   const { id = "" } = useParams();
+  const navigate = useNavigate();
   const [menu, setMenu] = useState<Menu | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -180,6 +181,37 @@ export function MenuEditorPage() {
             <ButtonLink to={`/menu/${menu.id}/qr`} variant="outline" icon={QrCode}>
               QR code
             </ButtonLink>
+            <Button
+              variant="outline"
+              icon={FileDown}
+              loading={busy === "pdf"}
+              onClick={() =>
+                void run("pdf", async () => {
+                  await downloadPdf(menu.id, menu.defaultLanguage, `${menu.slug}-${menu.defaultLanguage}.pdf`);
+                })
+              }
+            >
+              PDF
+            </Button>
+            {readOnly && (
+              <Button
+                icon={Copy}
+                loading={busy === "duplicate"}
+                onClick={async () => {
+                  setBusy("duplicate");
+                  setActionError(null);
+                  try {
+                    const copy = await api<Menu>(`/api/menus/${id}/duplicate`, { method: "POST" });
+                    navigate(`/menu/${copy.id}/edit`);
+                  } catch (err) {
+                    setActionError(errorMessage(err, "Could not duplicate the sample menu."));
+                    setBusy(null);
+                  }
+                }}
+              >
+                Duplicate sample
+              </Button>
+            )}
             {!readOnly && (
               <Button
                 variant={menu.isPublished ? "secondary" : "primary"}

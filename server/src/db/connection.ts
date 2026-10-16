@@ -21,5 +21,14 @@ export function openDatabase(filePath: string): Db {
     db.pragma("journal_mode = WAL");
   }
   db.exec(SCHEMA_SQL);
+  migrate(db);
   return db;
+}
+
+/** Add columns introduced after the first schema without rebuilding the file. */
+function migrate(db: Db) {
+  const columns = db.prepare("PRAGMA table_info(restaurants)").all() as Array<{ name: string }>;
+  if (!columns.some((column) => column.name === "is_demo")) {
+    db.exec("ALTER TABLE restaurants ADD COLUMN is_demo INTEGER NOT NULL DEFAULT 0");
+  }
 }

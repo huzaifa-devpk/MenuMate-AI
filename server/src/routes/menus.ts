@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { categoryInputSchema, dishInputSchema, menuInputSchema, menuUpdateSchema, reorderSchema, saveTranslationsSchema } from "@shared";
+import { categoryInputSchema, dishInputSchema, languageSchema, menuInputSchema, menuUpdateSchema, reorderSchema, saveTranslationsSchema } from "@shared";
 import type { Db } from "../db/connection";
 import {
   addCategory,
@@ -8,6 +8,7 @@ import {
   deleteCategory,
   deleteDish,
   deleteMenu,
+  duplicateMenu,
   getPrimaryRestaurant,
   listMenus,
   reorderCategories,
@@ -21,6 +22,7 @@ import {
 } from "../db/repository";
 import { asyncRoute, routeParam } from "../lib/async";
 import { badRequest } from "../lib/errors";
+import { renderMenuPdf } from "../services/pdf";
 import { shareInfo, sharePng } from "../services/share";
 
 export function createMenuRouter(db: Db) {
@@ -70,6 +72,28 @@ export function createMenuRouter(db: Db) {
     "/:menuId/unpublish",
     asyncRoute(async (req, res) => {
       res.json(setPublished(db, routeParam(req, "menuId"), false));
+    }),
+  );
+
+  router.get(
+    "/:menuId/pdf",
+    asyncRoute(async (req, res) => {
+      const menu = requireMenu(db, routeParam(req, "menuId"));
+      const requested = req.query.language;
+      const raw = Array.isArray(requested) ? requested[0] : requested;
+      const language = languageSchema.parse(typeof raw === "string" && raw ? raw : menu.defaultLanguage);
+      const pdf = await renderMenuPdf(menu, language);
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename="${menu.slug}-${language}.pdf"`);
+      res.send(pdf);
+    }),
+  );
+
+  router.post(
+    "/:menuId/duplicate",
+    asyncRoute(async (req, res) => {
+      const copy = duplicateMenu(db, routeParam(req, "menuId"));
+      res.status(201).json(copy);
     }),
   );
 

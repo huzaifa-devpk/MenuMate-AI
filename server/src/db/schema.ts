@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS restaurants (
   email           TEXT,
   address         TEXT,
   website         TEXT,
+  is_demo         INTEGER NOT NULL DEFAULT 0 CHECK (is_demo IN (0,1)),
   created_at      TEXT NOT NULL,
   updated_at      TEXT NOT NULL
 );
