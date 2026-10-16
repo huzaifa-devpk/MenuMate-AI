@@ -1,0 +1,34 @@
+# Render Blueprint for MenuMate AI.
+# This file does not deploy anything by itself. Persistent disks require a paid plan.
+# https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: menumate-ai
+    runtime: node
+    plan: starter
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_PATH
+        value: /var/data/menumate.sqlite
+      - key: APP_BASE_URL
+        sync: false
+      - key: GEMMA_API_KEY
+        sync: false
+      - key: GEMMA_PROVIDER
+        value: google
+      - key: GEMMA_MODEL
+        value: gemma-4-31b-it
+      - key: GEMMA_API_BASE_URL
+        value: https://generativelanguage.googleapis.com/v1beta
+      - key: GEMMA_THINKING_LEVEL
+        value: minimal
+    disk:
+      name: menumate-data
+      mountPath: /var/data
+      sizeGB: 1
