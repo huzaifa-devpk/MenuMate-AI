@@ -1,7 +1,11 @@
 import { Route, Routes } from "react-router-dom";
 import { AppLayout } from "./components/Layout";
 import { LandingPage } from "./pages/LandingPage";
+import { DashboardPage } from "./pages/DashboardPage";
+import { MenuEditorPage } from "./pages/MenuEditorPage";
+import { NewMenuPage } from "./pages/NewMenuPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { PreviewPage } from "./pages/PreviewPage";
 import { Construction } from "lucide-react";
 import { ButtonLink, EmptyState } from "./components/ui";
 
@@ -20,10 +24,10 @@ export default function App() {
     <Routes>
       <Route element={<AppLayout />}>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/dashboard" element={<ComingSoon title="Dashboard" />} />
-        <Route path="/menu/new" element={<ComingSoon title="Create a menu" />} />
-        <Route path="/menu/:id/edit" element={<ComingSoon title="Menu editor" />} />
-        <Route path="/menu/:id/preview" element={<ComingSoon title="Menu preview" />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/menu/new" element={<NewMenuPage />} />
+        <Route path="/menu/:id/edit" element={<MenuEditorPage />} />
+        <Route path="/menu/:id/preview" element={<PreviewPage />} />
         <Route path="/menu/:id/qr" element={<ComingSoon title="QR code & sharing" />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

@@ -39,7 +39,9 @@ export const priceSchema = z
   .finite()
   .min(0, "Price cannot be negative")
   .max(10_000_000, "Price is too large")
-  .refine((v) => Math.round(v * 100) === v * 100, { message: "Price can have at most two decimals" });
+  .refine((v) => Math.abs(Math.round(v * 100) - v * 100) < 1e-6, {
+    message: "Price can have at most two decimals",
+  });
 
 export const DIETARY_LABELS = [
   "vegetarian",
@@ -94,7 +96,11 @@ export const menuInputSchema = z.object({
 });
 export type MenuInput = z.infer<typeof menuInputSchema>;
 
-export const menuUpdateSchema = menuInputSchema.partial().extend({
+export const menuUpdateSchema = z.object({
+  name: trimmed(120).min(1, "Menu name is required").optional(),
+  currency: currencySchema.optional(),
+  defaultLanguage: languageSchema.optional(),
+  theme: themeSchema.optional(),
   slug: z
     .string()
     .trim()

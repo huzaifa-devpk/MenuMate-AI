@@ -14,8 +14,12 @@ export function openDatabase(filePath: string): Db {
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
   }
   const db = new Database(filePath);
-  db.pragma("journal_mode = WAL");
   db.pragma("foreign_keys = ON");
+  db.pragma("busy_timeout = 5000");
+  // WAL is for on-disk files. In-memory databases used by tests stay on the default journal.
+  if (filePath !== ":memory:") {
+    db.pragma("journal_mode = WAL");
+  }
   db.exec(SCHEMA_SQL);
   return db;
 }
