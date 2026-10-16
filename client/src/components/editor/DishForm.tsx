@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { DIETARY_LABELS, DIETARY_LABEL_NAMES, dishInputSchema, type DietaryLabel, type DishInput } from "@shared";
+import { DIETARY_LABELS, DIETARY_LABEL_NAMES, dishInputSchema, type DietaryLabel, type DishInput, type ImproveDescriptionResponse } from "@shared";
+import { api, errorMessage } from "../../lib/api";
 import { fieldErrors } from "../../lib/format";
-import { Button, Input, Textarea, cx } from "../ui";
+import { Alert, Button, Input, Textarea, cx } from "../ui";
 
 export interface DishDraft {
   name: string;
@@ -27,20 +28,29 @@ export function DishForm({
   busy,
   onSubmit,
   onCancel,
+  assist,
 }: {
   initial: DishDraft;
   submitLabel: string;
   busy?: boolean;
   onSubmit: (input: DishInput) => Promise<void>;
   onCancel?: () => void;
+  assist?: { language: string; categoryName: string };
 }) {
   const [draft, setDraft] = useState<DishDraft>(initial);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [suggestion, setSuggestion] = useState<string | null>(null);
+  const [assistError, setAssistError] = useState<string | null>(null);
+  const [assisting, setAssisting] = useState(false);
+  const [usedSuggestion, setUsedSuggestion] = useState(false);
   const initialKey = JSON.stringify(initial);
 
   useEffect(() => {
     setDraft(initial);
     setErrors({});
+    setSuggestion(null);
+    setAssistError(null);
+    setUsedSuggestion(false);
     // Reset only when the saved values change, not on every parent render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialKey]);
@@ -50,6 +60,34 @@ export function DishForm({
       ...d,
       labels: d.labels.includes(label) ? d.labels.filter((item) => item !== label) : [...d.labels, label],
     }));
+  }
+
+  async function improve() {
+    if (!assist) return;
+    if (!draft.name.trim()) {
+      setAssistError("Enter a dish name first.");
+      return;
+    }
+    setAssisting(true);
+    setAssistError(null);
+    try {
+      const response = await api<ImproveDescriptionResponse>("/api/ai/improve-description", {
+        method: "POST",
+        body: JSON.stringify({
+          dishName: draft.name,
+          currentDescription: draft.description,
+          categoryName: assist.categoryName,
+          labels: draft.labels,
+          language: assist.language,
+        }),
+      });
+      setSuggestion(response.description);
+    } catch (err) {
+      setSuggestion(null);
+      setAssistError(errorMessage(err, "Gemma could not draft a description. You can write one yourself."));
+    } finally {
+      setAssisting(false);
+    }
   }
 
   async function handleSubmit(event: FormEvent) {
@@ -96,10 +134,36 @@ export function DishForm({
         name="dish-description"
         value={draft.description}
         error={errors.description}
-        hint="Optional. Describe only what you actually serve."
+        hint={usedSuggestion ? "This text came from Gemma. Read it, then save the dish if you want to keep it." : "Optional. Describe only what you actually serve."}
         onChange={(e) => setDraft({ ...draft, description: e.target.value })}
         maxLength={600}
       />
+      {assist && (
+        <div className="space-y-2">
+          <Button type="button" variant="outline" size="sm" loading={assisting} onClick={() => void improve()}>
+            Improve description with Gemma
+          </Button>
+          {assistError && <Alert tone="error">{assistError}</Alert>}
+          {suggestion && (
+            <div className="rounded-xl border border-brand-200 bg-brand-50 p-3">
+              <p className="text-xs font-semibold tracking-wide text-brand-800 uppercase">AI draft — not saved</p>
+              <p className="mt-1 text-sm text-charcoal-800">{suggestion}</p>
+              <Button
+                type="button"
+                size="sm"
+                className="mt-2"
+                onClick={() => {
+                  setDraft({ ...draft, description: suggestion });
+                  setUsedSuggestion(true);
+                  setSuggestion(null);
+                }}
+              >
+                Use this description
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
       <Input
         label="Image URL"
         name="dish-image"

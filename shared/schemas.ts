@@ -161,6 +161,7 @@ export const saveTranslationsSchema = z.object({
         text: z.string().trim().max(1000),
       }),
     )
+    .min(1, "Choose at least one translation to save.")
     .max(1000),
 });
 export type SaveTranslationsInput = z.infer<typeof saveTranslationsSchema>;

@@ -11,6 +11,7 @@ import type {
   MenuSummary,
   MenuUpdate,
   Restaurant,
+  SaveTranslationsInput,
   RestaurantInput,
   TranslatableField,
 } from "@shared";
@@ -497,6 +498,46 @@ export function deleteDish(db: Db, menuId: string, dishId: string): Menu {
   const tx = db.transaction(() => {
     db.prepare("DELETE FROM translations WHERE entity_type = 'dish' AND entity_id = ?").run(dishId);
     db.prepare("DELETE FROM dishes WHERE id = ?").run(dishId);
+    touchMenu(db, menuId);
+  });
+  tx();
+  return requireMenu(db, menuId);
+}
+
+export function saveApprovedTranslations(db: Db, menuId: string, input: SaveTranslationsInput): Menu {
+  const menu = requireMenu(db, menuId);
+  assertMenuWritable(menu);
+  if (input.language === menu.defaultLanguage) {
+    throw badRequest("Translations are stored for a language other than the one the menu is written in. Edit the original dishes to change that text.");
+  }
+  const categoryIds = new Set(menu.categories.map((category) => category.id));
+  const dishIds = new Set(menu.categories.flatMap((category) => category.dishes.map((dish) => dish.id)));
+  for (const entry of input.entries) {
+    if (entry.entityType === "category") {
+      if (!categoryIds.has(entry.entityId)) throw badRequest("A translation refers to a category that is not on this menu.");
+      if (entry.field !== "name") throw badRequest("Categories only have a translated name.");
+    } else if (!dishIds.has(entry.entityId)) {
+      throw badRequest("A translation refers to a dish that is not on this menu.");
+    }
+  }
+
+  const upsert = db.prepare(
+    `INSERT INTO translations (entity_type, entity_id, language, field, text, status, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, 'approved', ?, ?)
+     ON CONFLICT(entity_type, entity_id, language, field)
+     DO UPDATE SET text = excluded.text, status = 'approved', updated_at = excluded.updated_at`,
+  );
+  const remove = db.prepare("DELETE FROM translations WHERE entity_type = ? AND entity_id = ? AND language = ? AND field = ?");
+  const tx = db.transaction(() => {
+    const now = nowIso();
+    for (const entry of input.entries) {
+      const text = entry.text.trim();
+      if (!text) {
+        remove.run(entry.entityType, entry.entityId, input.language, entry.field);
+        continue;
+      }
+      upsert.run(entry.entityType, entry.entityId, input.language, entry.field, text, now, now);
+    }
     touchMenu(db, menuId);
   });
   tx();

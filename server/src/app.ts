@@ -5,11 +5,16 @@ import { fileURLToPath } from "node:url";
 import type { Db } from "./db/connection";
 import { config } from "./config";
 import { errorHandler } from "./lib/errors";
+import { createAiRouter } from "./routes/ai";
 import { createMenuRouter } from "./routes/menus";
 import { createRestaurantRouter } from "./routes/restaurant";
+import { createGemmaClient } from "./services/ai/client";
+import type { GemmaClient } from "./services/ai/types";
 
 export interface AppDeps {
   db: Db;
+  /** Test hook. Production uses the Gemini API client built from the environment. */
+  gemma?: GemmaClient;
 }
 
 /**
@@ -23,8 +28,10 @@ export function createApp(deps: AppDeps) {
 
   app.use(express.json({ limit: "1mb" }));
 
+  const gemma = deps.gemma ?? createGemmaClient(config);
   app.use("/api/restaurant", createRestaurantRouter(deps.db));
   app.use("/api/menus", createMenuRouter(deps.db));
+  app.use("/api/ai", createAiRouter(deps.db, gemma));
 
   app.get("/api/health", (_req, res) => {
     let dbOk = true;

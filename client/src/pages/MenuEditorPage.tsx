@@ -12,6 +12,7 @@ import {
   type Menu,
 } from "@shared";
 import { DishForm, emptyDishDraft, type DishDraft } from "../components/editor/DishForm";
+import { TranslatePanel } from "../components/editor/TranslatePanel";
 import { Alert, Badge, Button, ButtonLink, Input, PageHeader, Select, Spinner } from "../components/ui";
 import { api, errorMessage } from "../lib/api";
 import { fieldErrors } from "../lib/format";
@@ -225,6 +226,8 @@ export function MenuEditorPage() {
         )}
       </form>
 
+      {!readOnly && <TranslatePanel menu={menu} onSaved={(next) => applyMenu(next, selectedId)} />}
+
       <div className="mt-8 grid items-start gap-6 lg:grid-cols-[280px_1fr]">
         <aside className="card p-4">
           <h2 className="text-sm font-semibold tracking-wide text-charcoal-500 uppercase">Categories</h2>
@@ -332,6 +335,7 @@ export function MenuEditorPage() {
                           initial={dishToDraft(dish)}
                           submitLabel="Save dish"
                           busy={busy === `dish-${dish.id}`}
+                          assist={{ language: menu.defaultLanguage, categoryName: selected.name }}
                           onCancel={() => setEditingDishId(null)}
                           onSubmit={async (input: DishInput) => {
                             const ok = await run(`dish-${dish.id}`, () => api<Menu>(`/api/menus/${id}/dishes/${dish.id}`, { method: "PATCH", body: JSON.stringify(input) }), "Dish saved.");
@@ -384,6 +388,7 @@ export function MenuEditorPage() {
                       initial={emptyDishDraft}
                       submitLabel="Add dish"
                       busy={busy === "add-dish"}
+                      assist={{ language: menu.defaultLanguage, categoryName: selected.name }}
                       onCancel={() => setAddingDish(false)}
                       onSubmit={async (input) => {
                         const ok = await run("add-dish", () => api<Menu>(`/api/menus/${id}/categories/${selected.id}/dishes`, { method: "POST", body: JSON.stringify(input) }), "Dish added.");

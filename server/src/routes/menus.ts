@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { categoryInputSchema, dishInputSchema, menuInputSchema, menuUpdateSchema, reorderSchema } from "@shared";
+import { categoryInputSchema, dishInputSchema, menuInputSchema, menuUpdateSchema, reorderSchema, saveTranslationsSchema } from "@shared";
 import type { Db } from "../db/connection";
 import {
   addCategory,
@@ -13,6 +13,7 @@ import {
   reorderCategories,
   reorderDishes,
   requireMenu,
+  saveApprovedTranslations,
   updateCategory,
   updateDish,
   updateMenu,
@@ -53,6 +54,14 @@ export function createMenuRouter(db: Db) {
     asyncRoute(async (req, res) => {
       const input = menuUpdateSchema.parse(req.body);
       res.json(updateMenu(db, routeParam(req, "menuId"), input));
+    }),
+  );
+
+  router.put(
+    "/:menuId/translations",
+    asyncRoute(async (req, res) => {
+      const input = saveTranslationsSchema.parse(req.body);
+      res.json(saveApprovedTranslations(db, routeParam(req, "menuId"), input));
     }),
   );
 
