@@ -4,10 +4,11 @@
 MenuMate AI empowers restaurants to effortlessly craft, manage, and publish QR-ready digital menus in **English** and **authentic Pakistani Urdu (Nastaliq script)**. By leveraging Google Gemma models via hosted inference, MenuMate AI solves the traditional hurdles of crude machine translation in gastronomy — preserving cultural nuances, authentic transliterations, and appetizing culinary tone.
 
 ---
+<img width="1888" height="830" alt="MM1" src="https://github.com/user-attachments/assets/398b2737-3b90-4de7-b487-5ea37e60fd64" />
 
-## 🌟 Key Highlights & Features
+##  Key Highlights & Features
 
-### 1. 🤖 Gemma 2 AI Translation Studio
+### 1.  Gemma 2 AI Translation Studio
 - **Bilingual Mastery**: Specializes in Pakistani and international cuisine (English ↔ Urdu).
 - **Culinary Nuance**: Understands iconic culinary terms (e.g., *Chicken Karahi* ➔ *چکن کڑاہی*, *Dum Biryani* ➔ *شاہی دم بریانی*, *Daal Makhani* ➔ *دال مکھنی*) rather than awkward literal word-for-word substitutions.
 - **Side-by-Side Review & Editing**: Restaurant owners can review, adjust, and approve translated titles, categories, and descriptions before publishing.
@@ -29,6 +30,8 @@ MenuMate AI empowers restaurants to effortlessly craft, manage, and publish QR-r
 - Instant printable "Scan & Dine" table tent preview for restaurant dining tables.
 
 ---
+
+<img width="1868" height="816" alt="MM2" src="https://github.com/user-attachments/assets/d557f9e3-769b-4171-8752-8ba3089e3068" />
 
 ## 🏗️ Architecture & Technology Stack
 
@@ -106,6 +109,8 @@ Launch both backend and frontend concurrently:
 ```bash
 npm run dev
 ```
+
+Github Repo: [MenuMate-AI](https://github.com/huzaifa-devpk/MenuMate-AI.git)
 
 - Frontend App: [http://localhost:5173](http://localhost:5173)
 - Live Demo Menu: [http://localhost:5173/m/saffron-garden](http://localhost:5173/m/saffron-garden)
