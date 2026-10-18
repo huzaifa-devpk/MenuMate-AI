@@ -1,0 +1,34 @@
+{
+  "name": "menumate-ai",
+  "version": "1.0.0",
+  "description": "MenuMate AI — Smart Multilingual Restaurant Menu Builder powered by Google Gemma",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev:server": "npm --workspace=server run dev",
+    "dev:client": "npm --workspace=client run dev",
+    "dev": "concurrently -n \"server,client\" -c \"blue,green\" \"npm run dev:server\" \"npm run dev:client\"",
+    "build:client": "npm --workspace=client run build",
+    "build:server": "npm --workspace=server run build",
+    "build": "npm run build:client && npm run build:server",
+    "start": "npm --workspace=server start",
+    "seed": "npm --workspace=server run seed",
+    "test": "npm --workspace=server run test"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "keywords": [
+    "gemma",
+    "hacktoberfest",
+    "restaurant-menu",
+    "urdu-translation",
+    "multilingual",
+    "dev-challenge"
+  ],
+  "author": "MenuMate AI Team",
+  "license": "MIT"
+}
